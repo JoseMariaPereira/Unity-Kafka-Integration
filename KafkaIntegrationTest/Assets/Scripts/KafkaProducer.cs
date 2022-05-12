@@ -20,12 +20,12 @@ namespace com.flyingcrow.kafka
         [SerializeField]
         private bool keepRunning;
 
-        private ConcurrentQueue<string> stringReceived;
+        private ConcurrentQueue<MessageWrapper> stringReceived;
 
         // Start is called before the first frame update
-        void Start()
+        public void StartKafkaProducer()
         {
-            stringReceived = new ConcurrentQueue<string>();
+            stringReceived = new ConcurrentQueue<MessageWrapper>();
             cancel = new CancellationTokenSource();
             thread = new Thread(KafkaWriter);
             thread.Start(cancel.Token);
@@ -47,18 +47,18 @@ namespace com.flyingcrow.kafka
                 {
                     try
                     {
-                        string message;
-                        while (stringReceived.TryDequeue(out message))
+                        MessageWrapper mw = new MessageWrapper();
+                        while (stringReceived.TryDequeue(out mw))
                         {
                             var deliveryReport = await producer.ProduceAsync(
-                            topicName, new Message<string, string> { Key = "", Value = message }, cancellation
+                            topicName, new Message<string, string> { Key = mw.player, Value = mw.value }, cancellation
                             );
                         }
 
                     }
-                    catch (ProduceException<Ignore, string> e)
+                    catch (ProduceException<Ignore, MessageWrapper> e)
                     {
-                        stringReceived.Enqueue("Consume error: " + e.Error.Reason);
+                        Debug.LogError("Consume error: " + e.Error.Reason);
                     }
                     catch (OperationCanceledException oce)
                     {
@@ -70,10 +70,12 @@ namespace com.flyingcrow.kafka
             }
         }
 
-        public void SendMovement(Vector3 movement)
+        public void SendMovement(Vector3 movement, string player)
         {
-            stringReceived.Enqueue("(" + movement.x.ToString().Replace(",", ".") + ", " + movement.y.ToString().Replace(",", ".") + ", " + movement.z.ToString().Replace(",", ".") + ")");
-            //stringReceived.Enqueue(movement.ToString());
+            MessageWrapper mw = new MessageWrapper();
+            mw.player = player;
+            mw.value = JsonUtility.ToJson(movement);
+            stringReceived.Enqueue(mw);
         }
 
 
@@ -87,5 +89,11 @@ namespace com.flyingcrow.kafka
             // Wait until the thread has completed.
             thread.Join();
         }
+    }
+
+    class MessageWrapper
+    {
+        public string player;
+        public string value;
     }
 }

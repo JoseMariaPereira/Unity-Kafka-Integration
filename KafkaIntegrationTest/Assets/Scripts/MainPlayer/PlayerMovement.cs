@@ -8,12 +8,27 @@ public class PlayerMovement : MonoBehaviour
     private float movementSpeed;
 
     private Vector3 prevPosition;
+
+    private KafkaPlayer kafkaPlayer;
+
+    [SerializeField]
+    private KafkaProducer kafkaProducer;
+
+    public void setCurrentPlayer(KafkaPlayer kp)
+    {
+        prevPosition = transform.position;
+        kafkaPlayer = kp;
+        kafkaProducer.StartKafkaProducer();
+    }
     
     // Update is called once per frame
     void FixedUpdate()
     {
         MoveCharacter();
-        SendPositionInformation();
+        if (kafkaPlayer)
+        {
+            SendPositionInformation();
+        }
     }
 
     private void MoveCharacter()
@@ -35,9 +50,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void SendPositionInformation()
     {
-        if (!transform.position.Equals(prevPosition))
+        if (Vector3.Distance(transform.position, prevPosition)>=0.001)
         {
-            this.GetComponent<KafkaProducer>().SendMovement(transform.position);
+            kafkaProducer.SendMovement(transform.position, kafkaPlayer.getPlayerName());
             prevPosition = transform.position;
         }
     }

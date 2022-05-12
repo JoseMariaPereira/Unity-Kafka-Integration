@@ -13,6 +13,8 @@ namespace com.flyingcrow.kafka
         private string bootstrapServer = "127.0.0.1:9092";
         [SerializeField]
         private string topicName = "unity-movement-test";
+        [SerializeField]
+        private string consumerGroupId;
 
         private Thread thread;
         private CancellationTokenSource cancel;
@@ -24,9 +26,9 @@ namespace com.flyingcrow.kafka
 
         private ConcurrentQueue<string> stringReceived;
 
-        void Start()
+        public void StartKafkaConsumer(string playerName)
         {
-            playerName = this.name;
+            this.playerName = playerName;
             stringReceived = new ConcurrentQueue<string>();
             cancel = new CancellationTokenSource();
             thread = new Thread(KafkaReader);
@@ -46,29 +48,9 @@ namespace com.flyingcrow.kafka
             Vector3 movement = transform.position;
             while (stringReceived.TryDequeue(out message))
             {
-                movement = StringToVector3(message);
+                movement = JsonUtility.FromJson<Vector3>(message);
             }
             transform.position = movement;
-        }
-
-        public static Vector3 StringToVector3(string sVector)
-        {
-            // Remove the parentheses
-            if (sVector.StartsWith("(") && sVector.EndsWith(")"))
-            {
-                sVector = sVector.Substring(1, sVector.Length - 2);
-            }
-
-            // split the items
-            string[] sArray = sVector.Split(',');
-
-            // store as a Vector3
-            Vector3 result = new Vector3(
-                float.Parse(sArray[0].Trim(), CultureInfo.InvariantCulture),
-                float.Parse(sArray[1].Trim(), CultureInfo.InvariantCulture),
-                float.Parse(sArray[2].Trim(), CultureInfo.InvariantCulture));
-
-            return result;
         }
 
         private void OnDestroy()
@@ -88,12 +70,12 @@ namespace com.flyingcrow.kafka
             ConsumerConfig config = new ConsumerConfig
             {
                 BootstrapServers = bootstrapServer,
-                GroupId = topicName ,
+                GroupId = consumerGroupId,
                 SessionTimeoutMs = 6000,
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
 
-            using (var consumer = new ConsumerBuilder<Ignore, string>(config)
+            using (var consumer = new ConsumerBuilder<string, string>(config)
                 // Note: All handlers are called on the main .Consume thread.
                 .SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}"))
                 .SetStatisticsHandler((_, json) => Console.WriteLine($"Statistics: {json}"))
@@ -104,12 +86,15 @@ namespace com.flyingcrow.kafka
                 {
                     try
                     {
-                        ConsumeResult<Ignore, string> consumeResult = consumer.Consume(cancellationToken);
-                        stringReceived.Enqueue(consumeResult.Message.Value);
+                        ConsumeResult<string, string> consumeResult = consumer.Consume(cancellationToken);
+                        if (consumeResult.Message.Key.Trim().Equals(playerName))
+                        {
+                            stringReceived.Enqueue(consumeResult.Message.Value);
+                        }
                     }
                     catch (ConsumeException e)
                     {
-                        stringReceived.Enqueue("Consume error: " + e.Error.Reason);
+                        Debug.LogError("Consume error: " + e.Error.Reason);
                     }
                     catch (OperationCanceledException oce)
                     {
