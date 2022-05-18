@@ -4,6 +4,7 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace com.flyingcrow.kafka
 {
@@ -22,7 +23,6 @@ namespace com.flyingcrow.kafka
 
         private ConcurrentQueue<MessageWrapper> stringReceived;
 
-        // Start is called before the first frame update
         public void StartKafkaProducer()
         {
             stringReceived = new ConcurrentQueue<MessageWrapper>();
@@ -38,7 +38,10 @@ namespace com.flyingcrow.kafka
 
         private async Task KafkaWriterAsync(CancellationToken cancellation)
         {
-            ProducerConfig config = new ProducerConfig { BootstrapServers = bootstrapServer };
+            ProducerConfig config = new ProducerConfig { 
+                BootstrapServers = bootstrapServer,
+                SecurityProtocol = SecurityProtocol.Plaintext
+            };
 
             using (var producer = new ProducerBuilder<string, string>(config)
                 .Build())
@@ -48,13 +51,16 @@ namespace com.flyingcrow.kafka
                     try
                     {
                         MessageWrapper mw = new MessageWrapper();
+                        MessageWrapper finalMw = null;
                         while (stringReceived.TryDequeue(out mw))
                         {
+                            finalMw = mw;
+                        }
+                        if (finalMw != null) {
                             var deliveryReport = await producer.ProduceAsync(
-                            topicName, new Message<string, string> { Key = mw.player, Value = mw.value }, cancellation
+                            topicName, new Message<string, string> { Key = finalMw.player, Value = finalMw.value }, cancellation
                             );
                         }
-
                     }
                     catch (ProduceException<Ignore, MessageWrapper> e)
                     {

@@ -22,7 +22,11 @@ namespace com.flyingcrow.kafka
         [SerializeField]
         private bool keepRunning;
 
+        [SerializeField]
+        private float movementSpeed;
+
         private string playerName;
+        private Vector3 previousMovement;
 
         private ConcurrentQueue<string> stringReceived;
 
@@ -33,6 +37,7 @@ namespace com.flyingcrow.kafka
             cancel = new CancellationTokenSource();
             thread = new Thread(KafkaReader);
             thread.Start(cancel.Token);
+            previousMovement = Vector3.down;
         }
 
         private void KafkaReader(object obj)
@@ -41,16 +46,25 @@ namespace com.flyingcrow.kafka
         }
 
         // Update is called once per frame
-        void FixedUpdate()
+        private void FixedUpdate()
         {
             // Print out all messages we received since last frame.
             string message;
-            Vector3 movement = transform.position;
+            Vector3 movement = Vector3.down;
             while (stringReceived.TryDequeue(out message))
             {
                 movement = JsonUtility.FromJson<Vector3>(message);
             }
-            transform.position = movement;
+            
+            if (movement != Vector3.down)
+                previousMovement = movement;
+            
+            if (previousMovement != Vector3.down)
+                transform.position = Vector3.Lerp(transform.position, previousMovement, movementSpeed * Time.deltaTime);
+
+            if (Vector3.Distance(transform.position, previousMovement) <= 0.01f)
+                previousMovement = Vector3.down;
+
         }
 
         private void OnDestroy()
@@ -72,7 +86,8 @@ namespace com.flyingcrow.kafka
                 BootstrapServers = bootstrapServer,
                 GroupId = consumerGroupId,
                 SessionTimeoutMs = 6000,
-                AutoOffsetReset = AutoOffsetReset.Earliest
+                
+                SecurityProtocol = SecurityProtocol.Plaintext
             };
 
             using (var consumer = new ConsumerBuilder<string, string>(config)

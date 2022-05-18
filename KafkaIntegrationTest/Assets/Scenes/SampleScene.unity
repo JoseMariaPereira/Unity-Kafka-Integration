@@ -203,8 +203,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cd0b6bc70266f54dbc1a192f64e7f0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bootstrapServer: 127.0.0.1:9092
-  topicName: unity-movement-test-multiplayer
+  bootstrapServer: 4.tcp.eu.ngrok.io:15075
+  topicName: patata-test
   keepRunning: 1
 --- !u!114 &329207412
 MonoBehaviour:
@@ -503,10 +503,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b878fcd113ecdae409be2ddef47572ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bootstrapServer: 127.0.0.1:9092
-  topicName: unity-movement-test-multiplayer
+  bootstrapServer: 4.tcp.eu.ngrok.io:15075
+  topicName: patata-test
   consumerGroupId: red
   keepRunning: 1
+  movementSpeed: 5
 --- !u!136 &886069100
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -727,8 +728,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cd0b6bc70266f54dbc1a192f64e7f0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bootstrapServer: 127.0.0.1:9092
-  topicName: unity-movement-test-multiplayer
+  bootstrapServer: 4.tcp.eu.ngrok.io:15075
+  topicName: patata-test
   keepRunning: 1
 --- !u!1 &963194225
 GameObject:
@@ -1045,7 +1046,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1553249496}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec762bf48e6f5d94cb9af403ac449131, type: 3}
   m_Name: 
@@ -1059,7 +1060,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1553249496}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec762bf48e6f5d94cb9af403ac449131, type: 3}
   m_Name: 
@@ -1112,10 +1113,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b878fcd113ecdae409be2ddef47572ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bootstrapServer: 127.0.0.1:9092
-  topicName: unity-movement-test-multiplayer
+  bootstrapServer: 4.tcp.eu.ngrok.io:15075
+  topicName: patata-test
   consumerGroupId: pacman
   keepRunning: 1
+  movementSpeed: 5
 --- !u!136 &1697384145
 CapsuleCollider:
   m_ObjectHideFlags: 0
